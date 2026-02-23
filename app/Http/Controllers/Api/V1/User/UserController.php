@@ -3,19 +3,30 @@
 namespace App\Http\Controllers\Api\V1\User;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\User\CreateUserRequest;
 use App\Http\Resources\Api\V1\User\UserResource;
 use App\Models\User;
+use App\Services\Api\V1\UserService;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index()
-    {
-        $users = User::all();
+    public function __construct(
+        private UserService $userService
+    ) {}
 
-        return $this->successResponse(
+    public function index(Request $request)
+    {
+        $users = $this->userService->getAllUsers($request->input('per_page'));
+
+        return $this->paginateResponse(
             message: 'Пользователи получены успешно',
             data: UserResource::collection($users),
+            perPage: $request->input('per_page'),
+            total: $users->total(),
+            nextPage: $users->nextPageUrl(),
+            prevPage: $users->previousPageUrl(),
+            pages: $users->lastPage(),
         );
     }
 
@@ -27,19 +38,13 @@ class UserController extends Controller
         );
     }
 
-    public function store(Request $request)
+    public function store(CreateUserRequest $request)
     {
-        User::create([
-            'first_name' => $request->input('first_name'),
-            'last_name' => $request->input('last_name'),
-            'email' => $request->input('email'),
-            'password' => bcrypt($request->input('password')),
-            'joined_at' => now()
-        ]);
+        $user = $this->userService->save($request->validated());
 
         return $this->successResponse(
             message: 'Пользователь был создан успешно',
-            data: [],
+            data: new UserResource($user),
             status: 201
         );
     }
