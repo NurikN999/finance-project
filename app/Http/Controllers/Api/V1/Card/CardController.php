@@ -15,6 +15,7 @@ class CardController extends Controller
         private CardService $cardService
     ) {}
 
+    // Returns all cards
     public function index(Request $request)
     {
         $cards = $this->cardService->getAllCards($request->input('per_page'));
