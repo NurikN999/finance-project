@@ -15,7 +15,6 @@ class UserController extends Controller
         private UserService $userService
     ) {}
 
-    // Returns all users
     public function index(Request $request)
     {
         $users = $this->userService->getAllUsers($request->input('per_page'));
